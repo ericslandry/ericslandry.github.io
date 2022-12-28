@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "TEst!"
+title:  "GitHub Actions!"
 date:   2022-12-28 11:47:18 +0000
 categories: jekyll update
 ---
