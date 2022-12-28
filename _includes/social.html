@@ -1,0 +1,6 @@
+<ul class="social-media-list">
+  {%- for entry in site.minima.social_links -%}
+    {%- include social-item.html item = entry -%}
+  {%- endfor -%}
+  {%- if site.stackoverflow_username -%}<li><a href="https://stackoverflow.com/users/{{ site.stackoverflow_username| escape }}"><svg class="svg-icon"><use xlink:href="{{ '/assets/minima-social-icons.svg#stackoverflow' | relative_url }}"></use></svg> <span class="username">{{ site.stackoverflow_username| split: "/" | last | escape }}</span></a></li>{%- endif -%}
+</ul>
