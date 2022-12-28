@@ -5,4 +5,5 @@
 layout: home
 ---
 
-bobo
+When I'm learning something new, I'll often scribble down some notes to get me going. 
+Here are a few of my scribbles that might be helpful to others.
