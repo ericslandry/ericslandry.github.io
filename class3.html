@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seating Arrangement Organizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .student-preferences {
+            margin-top: 10px;
+        }
+        .preference {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .preference select, .preference input {
+            margin-right: 10px;
+        }
+        .add-preference {
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+        .seating-arrangement {
+            margin-top: 20px;
+        }
+        .table {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .table h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .seats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .seat {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 5px;
+            min-width: 80px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #import-file {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Seating Arrangement Organizer</h1>
+        <div class="form-group">
+            <label for="num-tables">Number of Tables:</label>
+            <input type="number" id="num-tables" min="1" placeholder="Enter number of tables">
+        </div>
+        <div class="form-group">
+            <label for="students">Students (one per line):</label>
+            <textarea id="students" rows="5" placeholder="Enter student names, one per line"></textarea>
+        </div>
+        <div id="preferences-container">
+            <!-- Preferences will be dynamically added here -->
+        </div>
+        <button id="generate-arrangement">Generate Arrangement</button>
+        <button id="export-arrangement">Export Arrangement</button>
+        <button id="import-arrangement">Import Arrangement</button>
+        <input type="file" id="import-file" accept=".json">
+        <div class="seating-arrangement" id="seating-arrangement">
+            <!-- Seating arrangement will be displayed here -->
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const studentsInput = document.getElementById('students');
+            const preferencesContainer = document.getElementById('preferences-container');
+            const generateButton = document.getElementById('generate-arrangement');
+            const exportButton = document.getElementById('export-arrangement');
+            const importButton = document.getElementById('import-arrangement');
+            const importFileInput = document.getElementById('import-file');
+            const seatingArrangementDiv = document.getElementById('seating-arrangement');
+            let currentArrangement = null;
+
+            studentsInput.addEventListener('input', updatePreferences);
+            generateButton.addEventListener('click', generateArrangement);
+            exportButton.addEventListener('click', exportData);
+            importButton.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', handleImport);
+
+            function updatePreferences() {
+                const students = studentsInput.value.split('\n').filter(name => name.trim() !== '');
+                preferencesContainer.innerHTML = '';
+                students.forEach(student => {
+                    const studentDiv = document.createElement('div');
+                    studentDiv.className = 'form-group';
+                    studentDiv.innerHTML = `<label>Preferences for ${student}:</label>`;
+                    const preferencesDiv = document.createElement('div');
+                    preferencesDiv.className = 'student-preferences';
+                    const addPreference = document.createElement('span');
+                    addPreference.className = 'add-preference';
+                    addPreference.textContent = 'Add preference';
+                    addPreference.addEventListener('click', () => addPreferenceField(preferencesDiv, students, student));
+                    studentDiv.appendChild(preferencesDiv);
+                    studentDiv.appendChild(addPreference);
+                    preferencesContainer.appendChild(studentDiv);
+                    addPreferenceField(preferencesDiv, students, student); // Add one preference by default
+                });
+            }
+
+            function addPreferenceField(container, students, currentStudent, selectedStudent = null, selectedType = null) {
+                const preferenceDiv = document.createElement('div');
+                preferenceDiv.className = 'preference';
+                const select = document.createElement('select');
+                students.forEach(student => {
+                    if (student !== currentStudent) {
+                        const option = document.createElement('option');
+                        option.value = student;
+                        option.textContent = student;
+                        if (student === selectedStudent) option.selected = true;
+                        select.appendChild(option);
+                    }
+                });
+                const typeSelect = document.createElement('select');
+                ['want to sit close to', 'don\'t want to sit close to'].forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    if (type === selectedType) option.selected = true;
+                    typeSelect.appendChild(option);
+                });
+                preferenceDiv.appendChild(select);
+                preferenceDiv.appendChild(typeSelect);
+                container.appendChild(preferenceDiv);
+            }
+
+            function getPreferences() {
+                const students = studentsInput.value.split('\n').filter(name => name.trim() !== '');
+                const preferences = {};
+                students.forEach(student => {
+                    preferences[student] = { want: [], dontWant: [] };
+                    const studentPreferences = preferencesContainer.querySelectorAll(`.student-preferences`);
+                    const index = students.indexOf(student);
+                    if (index >= 0 && studentPreferences[index]) {
+                        const preferenceDivs = studentPreferences[index].querySelectorAll('.preference');
+                        preferenceDivs.forEach(div => {
+                            const select = div.querySelector('select:first-child');
+                            const typeSelect = div.querySelector('select:last-child');
+                            if (select && typeSelect) {
+                                const type = typeSelect.value;
+                                if (type === 'want to sit close to') {
+                                    preferences[student].want.push(select.value);
+                                } else {
+                                    preferences[student].dontWant.push(select.value);
+                                }
+                            }
+                        });
+                    }
+                });
+                return preferences;
+            }
+
+            function generateArrangement() {
+                const numTables = parseInt(document.getElementById('num-tables').value);
+                const students = studentsInput.value.split('\n').filter(name => name.trim() !== '');
+                const preferences = getPreferences();
+
+                // Enhanced arrangement logic (same as before)
+                const tables = Array.from({ length: numTables }, () => []);
+                const assigned = new Set();
+
+                // Step 1: Handle "want to sit close to" preferences by grouping students
+                students.forEach(student => {
+                    if (assigned.has(student)) return;
+                    const group = [student];
+                    assigned.add(student);
+                    const queue = [student];
+                    while (queue.length > 0) {
+                        const current = queue.shift();
+                        preferences[current].want.forEach(pref => {
+                            if (!assigned.has(pref)) {
+                                group.push(pref);
+                                assigned.add(pref);
+                                queue.push(pref);
+                            }
+                        });
+                    }
+                    assignGroupToTables(group, tables, preferences);
+                });
+
+                // Step 2: Assign remaining students
+                students.forEach(student => {
+                    if (!assigned.has(student)) {
+                        assignStudentToTable(student, tables, preferences);
+                        assigned.add(student);
+                    }
+                });
+
+                currentArrangement = tables;
+                displayArrangement(tables);
+            }
+
+            function assignGroupToTables(group, tables, preferences) {
+                for (let table of tables) {
+                    if (canPlaceGroup(table, group, preferences)) {
+                        table.push(...group);
+                        return;
+                    }
+                }
+                // If no table fits the whole group, assign individually
+                group.forEach(student => assignStudentToTable(student, tables, preferences));
+            }
+
+            function canPlaceGroup(table, group, preferences) {
+                for (let student of group) {
+                    for (let existing of table) {
+                        if (preferences[student].dontWant.includes(existing) || preferences[existing].dontWant.includes(student)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            function assignStudentToTable(student, tables, preferences) {
+                for (let table of tables) {
+                    if (canPlaceStudent(table, student, preferences)) {
+                        table.push(student);
+                        return;
+                    }
+                }
+                // Fallback: place in the least conflicting table (here, first table)
+                tables[0].push(student);
+            }
+
+            function canPlaceStudent(table, student, preferences) {
+                for (let existing of table) {
+                    if (preferences[student].dontWant.includes(existing) || preferences[existing].dontWant.includes(student)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            function displayArrangement(arrangement) {
+                seatingArrangementDiv.innerHTML = '';
+                arrangement.forEach((table, index) => {
+                    const tableDiv = document.createElement('div');
+                    tableDiv.className = 'table';
+                    tableDiv.innerHTML = `<h3>Table ${index + 1}</h3><div class="seats">${table.map(student => `<span class="seat">${student}</span>`).join('')}</div>`;
+                    seatingArrangementDiv.appendChild(tableDiv);
+                });
+            }
+
+            function exportData() {
+                const numTables = document.getElementById('num-tables').value;
+                const students = studentsInput.value.split('\n').filter(name => name.trim() !== '');
+                const preferences = getPreferences();
+                const arrangement = currentArrangement ? currentArrangement.map(table => [...table]) : null;
+                const data = {
+                    numTables,
+                    students,
+                    preferences,
+                    arrangement
+                };
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'seating_arrangement.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            function handleImport(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        // Update the app with loaded data
+                        document.getElementById('num-tables').value = data.numTables || '';
+                        studentsInput.value = data.students ? data.students.join('\n') : '';
+                        updatePreferences(); // Generate preference fields
+                        if (data.preferences) {
+                            setPreferences(data.preferences);
+                        }
+                        if (data.arrangement) {
+                            currentArrangement = data.arrangement;
+                            displayArrangement(data.arrangement);
+                        } else {
+                            currentArrangement = null;
+                            seatingArrangementDiv.innerHTML = '';
+                        }
+                    } catch (error) {
+                        alert('Error loading file: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            function setPreferences(loadedPreferences) {
+                const students = studentsInput.value.split('\n').filter(name => name.trim() !== '');
+                students.forEach(student => {
+                    const studentDiv = preferencesContainer.querySelector(`.form-group:nth-child(${students.indexOf(student) + 1}) .student-preferences`);
+                    if (studentDiv) {
+                        studentDiv.innerHTML = '';
+                        const prefs = loadedPreferences[student];
+                        if (prefs) {
+                            ['want', 'dontWant'].forEach(type => {
+                                prefs[type].forEach(prefStudent => {
+                                    addPreferenceField(studentDiv, students, student, prefStudent, type === 'want' ? 'want to sit close to' : 'don\'t want to sit close to');
+                                });
+                            });
+                        }
+                        // Add at least one empty preference field
+                        if (!prefs || (prefs.want.length === 0 && prefs.dontWant.length === 0)) {
+                            addPreferenceField(studentDiv, students, student);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
