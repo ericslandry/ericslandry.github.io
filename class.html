@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seating Arrangement Organizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .student-preferences {
+            margin-top: 10px;
+        }
+        .preference {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .preference select, .preference input {
+            margin-right: 10px;
+        }
+        .add-preference {
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+        .seating-arrangement {
+            margin-top: 20px;
+        }
+        .table {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .table h3 {
+            margin: 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Seating Arrangement Organizer</h1>
+        <div class="form-group">
+            <label for="num-tables">Number of Tables:</label>
+            <input type="number" id="num-tables" min="1" placeholder="Enter number of tables">
+        </div>
+        <div class="form-group">
+            <label for="students">Students (one per line):</label>
+            <textarea id="students" rows="5" placeholder="Enter student names, one per line"></textarea>
+        </div>
+        <div id="preferences-container">
+            <!-- Preferences will be dynamically added here -->
+        </div>
+        <button id="generate-arrangement">Generate Arrangement</button>
+        <div class="seating-arrangement" id="seating-arrangement">
+            <!-- Seating arrangement will be displayed here -->
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const studentsInput = document.getElementById('students');
+            const preferencesContainer = document.getElementById('preferences-container');
+            const generateButton = document.getElementById('generate-arrangement');
+            const seatingArrangementDiv = document.getElementById('seating-arrangement');
+
+            studentsInput.addEventListener('input', updatePreferences);
+            generateButton.addEventListener('click', generateArrangement);
+
+            function updatePreferences() {
+                const students = studentsInput.value.split('\n').filter(name => name.trim() !== '');
+                preferencesContainer.innerHTML = '';
+                students.forEach(student => {
+                    const studentDiv = document.createElement('div');
+                    studentDiv.className = 'form-group';
+                    studentDiv.innerHTML = `<label>Preferences for ${student}:</label>`;
+                    const preferencesDiv = document.createElement('div');
+                    preferencesDiv.className = 'student-preferences';
+                    const addPreference = document.createElement('span');
+                    addPreference.className = 'add-preference';
+                    addPreference.textContent = 'Add preference';
+                    addPreference.addEventListener('click', () => addPreferenceField(preferencesDiv, students, student));
+                    studentDiv.appendChild(preferencesDiv);
+                    studentDiv.appendChild(addPreference);
+                    preferencesContainer.appendChild(studentDiv);
+                    addPreferenceField(preferencesDiv, students, student); // Add one preference by default
+                });
+            }
+
+            function addPreferenceField(container, students, currentStudent) {
+                const preferenceDiv = document.createElement('div');
+                preferenceDiv.className = 'preference';
+                const select = document.createElement('select');
+                students.forEach(student => {
+                    if (student !== currentStudent) {
+                        const option = document.createElement('option');
+                        option.value = student;
+                        option.textContent = student;
+                        select.appendChild(option);
+                    }
+                });
+                const typeSelect = document.createElement('select');
+                ['want to sit close to', 'don\'t want to sit close to'].forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    typeSelect.appendChild(option);
+                });
+                preferenceDiv.appendChild(select);
+                preferenceDiv.appendChild(typeSelect);
+                container.appendChild(preferenceDiv);
+            }
+
+            function generateArrangement() {
+                const numTables = parseInt(document.getElementById('num-tables').value);
+                const students = studentsInput.value.split('\n').filter(name => name.trim() !== '');
+                const preferences = {};
+                students.forEach(student => {
+                    preferences[student] = [];
+                    const studentPreferences = preferencesContainer.querySelectorAll(`.student-preferences`);
+                    const index = students.indexOf(student);
+                    if (index >= 0 && studentPreferences[index]) {
+                        const preferenceDivs = studentPreferences[index].querySelectorAll('.preference');
+                        preferenceDivs.forEach(div => {
+                            const select = div.querySelector('select:first-child');
+                            const typeSelect = div.querySelector('select:last-child');
+                            if (select && typeSelect) {
+                                preferences[student].push({
+                                    student: select.value,
+                                    type: typeSelect.value
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Simple arrangement logic: group students who want to sit close together
+                const tables = Array.from({ length: numTables }, () => []);
+                const assigned = new Set();
+
+                // First, handle "want to sit close to" preferences
+                students.forEach(student => {
+                    if (assigned.has(student)) return;
+                    const group = [student];
+                    assigned.add(student);
+                    const queue = [student];
+                    while (queue.length > 0) {
+                        const current = queue.shift();
+                        preferences[current].forEach(pref => {
+                            if (pref.type === 'want to sit close to' && !assigned.has(pref.student)) {
+                                group.push(pref.student);
+                                assigned.add(pref.student);
+                                queue.push(pref.student);
+                            }
+                        });
+                    }
+                    // Assign group to tables
+                    group.forEach(member => {
+                        const tableIndex = tables.findIndex(table => table.length < Math.ceil(students.length / numTables));
+                        if (tableIndex !== -1) {
+                            tables[tableIndex].push(member);
+                        } else {
+                            tables[0].push(member); // Fallback
+                        }
+                    });
+                });
+
+                // Then, assign remaining students
+                students.forEach(student => {
+                    if (!assigned.has(student)) {
+                        const tableIndex = tables.findIndex(table => table.length < Math.ceil(students.length / numTables));
+                        if (tableIndex !== -1) {
+                            tables[tableIndex].push(student);
+                        } else {
+                            tables[0].push(student); // Fallback
+                        }
+                        assigned.add(student);
+                    }
+                });
+
+                // Display the arrangement
+                seatingArrangementDiv.innerHTML = '';
+                tables.forEach((table, index) => {
+                    const tableDiv = document.createElement('div');
+                    tableDiv.className = 'table';
+                    tableDiv.innerHTML = `<h3>Table ${index + 1}</h3><ul>${table.map(student => `<li>${student}</li>`).join('')}</ul>`;
+                    seatingArrangementDiv.appendChild(tableDiv);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
