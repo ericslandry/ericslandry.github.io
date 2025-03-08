@@ -14,21 +14,24 @@ let pixelDistance = null;
 const METERS_TO_KMH = 3.6;
 let debugLogArray = [];
 
-// Log debug info to array
 function logDebug(text) {
-    debugLogArray.push(text);
-    if (debugLogArray.length > 10) debugLogArray.shift(); // Keep last 10 logs
-    debugLogs.textContent = debugLogArray.join('\n');
+    debugLogArray.push(new Date().toLocaleTimeString() + ': ' + text);
+    if (debugLogArray.length > 10) debugLogArray.shift();
+    if (debugPopup.classList.contains('active')) {
+        debugLogs.textContent = debugLogArray.join('\n');
+    }
 }
 
-// Set canvas size explicitly to 480x640
 function resizeCanvas() {
-    canvas.width = 480;
-    canvas.height = 640;
+    canvas.width = video.clientWidth;
+    canvas.height = video.clientHeight;
     logDebug(`Canvas set to ${canvas.width}x${canvas.height}`);
 }
 
-// Start the camera with constrained resolution
+function closePopup(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
 navigator.mediaDevices.getUserMedia({ 
     video: { 
         facingMode: 'environment',
@@ -49,11 +52,10 @@ navigator.mediaDevices.getUserMedia({
         alert('Camera error: ' + error.message);
     });
 
-// Use tracking.js to track a colored object
 function startTracking() {
-    const tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'red', 'green']);
-    tracker.setMinDimension(3);
-    tracker.setMinGroupSize(5);
+    const tracker = new tracking.ColorTracker(['red', 'green', 'blue', 'yellow', 'magenta', 'cyan']);
+    tracker.setMinDimension(2);
+    tracker.setMinGroupSize(3);
     tracker.setStepSize(1);
 
     tracker.on('track', event => {
@@ -79,7 +81,7 @@ function startTracking() {
 
                 debugText += `\nDistance: ${distancePx.toFixed(2)} px, Time: ${dt.toFixed(4)} s`;
 
-                if (pixelDistance === null && distancePx > 15) {
+                if (pixelDistance === null && distancePx > 10) {
                     pixelDistance = distancePx;
                     debugText += `\nCalibrated: ${pixelDistance.toFixed(2)} px = ${distanceSelect.value} m`;
                 }
@@ -114,16 +116,18 @@ function startTracking() {
     logDebug(`Tracking started`);
 }
 
-// Button event listeners
 debugBtn.addEventListener('click', () => {
-    debugPopup.classList.remove('hidden');
+    debugPopup.classList.add('active');
+    debugLogs.textContent = debugLogArray.join('\n');
 });
 
 settingsBtn.addEventListener('click', () => {
-    settingsPopup.classList.remove('hidden');
+    settingsPopup.classList.add('active');
 });
 
 distanceSelect.addEventListener('change', () => {
     pixelDistance = null;
     logDebug(`Distance changed to ${distanceSelect.value} m, recalibration needed`);
 });
+
+window.addEventListener('resize', resizeCanvas);
