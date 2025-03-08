@@ -9,15 +9,21 @@ let lastX = null, lastY = null, lastTime = null;
 let pixelDistance = null; // To store the pixel distance for calibration
 const METERS_TO_KMH = 3.6; // m/s to km/h
 
-// Set canvas size to match video
+// Set canvas size explicitly to 480x640
 function resizeCanvas() {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    debugDisplay.textContent = `Debug Info: Canvas resized to ${canvas.width}x${canvas.height}`;
+    canvas.width = 480;
+    canvas.height = 640;
+    debugDisplay.textContent = `Debug Info: Canvas set to ${canvas.width}x${canvas.height}`;
 }
 
-// Start the camera
-navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+// Start the camera with constrained resolution
+navigator.mediaDevices.getUserMedia({ 
+    video: { 
+        facingMode: 'environment',
+        width: { ideal: 480 },
+        height: { ideal: 640 }
+    } 
+})
     .then(stream => {
         video.srcObject = stream;
         video.onloadedmetadata = () => {
