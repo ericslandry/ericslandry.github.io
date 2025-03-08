@@ -27,17 +27,16 @@ let prevFrameData = null;
 const motionThreshold = 30; // pixel difference threshold
 const minMovementPixels = 5; // minimum pixel movement for calibration
 
-// --- Camera Setup ---
 function setupCamera() {
   const constraints = {
     video: {
-      facingMode: { exact: "environment" },
+      facingMode: { ideal: "environment" },
       width: { ideal: 480 },
       height: { ideal: 640 }
     },
     audio: false
   };
-  
+
   navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => {
       video.srcObject = stream;
@@ -51,6 +50,7 @@ function setupCamera() {
       addDebugLine("Error accessing camera: " + err);
     });
 }
+
 
 // Adjust the overlay and motion canvas sizes to match the video
 function adjustCanvasSize() {
