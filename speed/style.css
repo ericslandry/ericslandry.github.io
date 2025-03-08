@@ -30,13 +30,30 @@ canvas {
     pointer-events: none;
 }
 
+#info {
+    margin-top: 10px;
+    text-align: center;
+}
+
 #speed {
     font-size: 20px;
     color: #d32f2f;
-    margin: 10px;
+    margin: 5px 0;
+}
+
+label {
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+select {
+    padding: 5px;
+    font-size: 16px;
+    border-radius: 5px;
 }
 
 #instructions {
     font-size: 14px;
     color: #555;
+    margin: 5px 0;
 }
