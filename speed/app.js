@@ -6,8 +6,8 @@ const distanceSelect = document.getElementById('distance');
 const debugDisplay = document.getElementById('debug');
 
 let lastX = null, lastY = null, lastTime = null;
-let pixelDistance = null; // To store the pixel distance for calibration
-const METERS_TO_KMH = 3.6; // m/s to km/h
+let pixelDistance = null;
+const METERS_TO_KMH = 3.6;
 
 // Set canvas size explicitly to 480x640
 function resizeCanvas() {
@@ -39,16 +39,17 @@ navigator.mediaDevices.getUserMedia({
 
 // Use tracking.js to track a colored object
 function startTracking() {
-    const tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'red']);
-    tracker.setMinDimension(5); // Lowered to detect smaller objects
-    tracker.setMinGroupSize(10); // Minimum pixel group size for detection
+    const tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'red', 'green']);
+    tracker.setMinDimension(3); // Even lower for smaller objects
+    tracker.setMinGroupSize(5); // Lowered for sensitivity
+    tracker.setStepSize(1); // Finer step size for better detection
 
     tracker.on('track', event => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (event.data.length > 0) {
             const rect = event.data[0]; // Track the first detected object
-            const x = rect.x + rect.width / 2; // Center of the object
+            const x = rect.x + rect.width / 2;
             const y = rect.y + rect.height / 2;
 
             // Draw a rectangle around the tracked object
@@ -61,26 +62,26 @@ function startTracking() {
             // Calculate speed in km/h
             if (lastX !== null && lastY !== null && lastTime !== null) {
                 const now = performance.now();
-                const dt = (now - lastTime) / 1000; // Time in seconds
+                const dt = (now - lastTime) / 1000;
                 const dx = x - lastX;
                 const dy = y - lastY;
-                const distancePx = Math.sqrt(dx * dx + dy * dy); // Pixels moved
+                const distancePx = Math.sqrt(dx * dx + dy * dy);
 
                 debugText += `\nDistance: ${distancePx.toFixed(2)} px, Time: ${dt.toFixed(4)} s`;
 
                 // Calibrate on first significant movement
-                if (pixelDistance === null && distancePx > 20) {
+                if (pixelDistance === null && distancePx > 15) { // Lowered threshold
                     pixelDistance = distancePx;
                     debugText += `\nCalibrated: ${pixelDistance.toFixed(2)} px = ${distanceSelect.value} m`;
                 }
 
                 // Calculate speed if calibrated
                 if (pixelDistance !== null) {
-                    const selectedDistanceM = parseFloat(distanceSelect.value); // Meters from dropdown
-                    const pixelsToMeters = selectedDistanceM / pixelDistance; // Meters per pixel
-                    const distanceM = distancePx * pixelsToMeters; // Meters moved
-                    const speedMS = distanceM / dt; // Meters per second
-                    const speedKMH = speedMS * METERS_TO_KMH; // Kilometers per hour
+                    const selectedDistanceM = parseFloat(distanceSelect.value);
+                    const pixelsToMeters = selectedDistanceM / pixelDistance;
+                    const distanceM = distancePx * pixelsToMeters;
+                    const speedMS = distanceM / dt;
+                    const speedKMH = speedMS * METERS_TO_KMH;
                     speedDisplay.textContent = `Speed: ${speedKMH.toFixed(2)} km/h`;
                     debugText += `\nSpeed: ${speedKMH.toFixed(2)} km/h`;
                 } else {
@@ -107,6 +108,6 @@ function startTracking() {
 
 // Recalibrate when distance changes
 distanceSelect.addEventListener('change', () => {
-    pixelDistance = null; // Reset calibration
+    pixelDistance = null;
     debugDisplay.textContent = `Debug Info: Distance changed to ${distanceSelect.value} m, recalibration needed`;
 });
