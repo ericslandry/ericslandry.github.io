@@ -12,9 +12,14 @@
             <video id="video" autoplay muted></video>
             <canvas id="canvas"></canvas>
             <div id="overlay">
-                <p id="speed">Speed: 0 km/h</p>
-                <button id="debugBtn">Debug</button>
-                <button id="settingsBtn">Settings</button>
+                <div class="speed-display">
+                    <span id="speed">0</span>
+                    <span class="unit">km/h</span>
+                </div>
+                <div class="controls">
+                    <button id="debugBtn">Debug</button>
+                    <button id="settingsBtn">Settings</button>
+                </div>
             </div>
         </div>
         <div id="debugPopup" class="popup">
@@ -27,16 +32,18 @@
         <div id="settingsPopup" class="popup">
             <div class="popup-content">
                 <h2>Settings</h2>
-                <label for="distance">Calibration Distance (m):</label>
-                <select id="distance">
-                    <option value="0.1">0.1</option>
-                    <option value="0.5">0.5</option>
-                    <option value="1" selected>1</option>
-                    <option value="2">2</option>
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                </select>
-                <p>Move object this distance to calibrate.</p>
+                <div class="setting-item">
+                    <label for="distance">Calibration Distance (m):</label>
+                    <select id="distance">
+                        <option value="0.1">0.1</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <p class="instructions">Move object this distance to calibrate.</p>
                 <button onclick="closePopup('settingsPopup')">Close</button>
             </div>
         </div>
