@@ -2,7 +2,7 @@
 Human Speed Estimator App
 Description: Uses the phone’s rear camera and tracking.js to estimate the speed of a human.
 It first attempts face tracking (Option 1) and, if no detection occurs, falls back to a simple motion detection (Option 2).
-It includes a calibration step based on a dropdown selection.
+It includes a calibration step based on a dropdown, and now a button to copy debug logs.
 */
 
 // Global variables
@@ -12,6 +12,7 @@ let overlayCtx = overlay.getContext('2d');
 let speedDisplay = document.getElementById('speedDisplay');
 let calibrationSelect = document.getElementById('calibrationSelect');
 let debugTextDiv = document.getElementById('debugText');
+let copyDebugButton = document.getElementById('copyDebugButton');
 
 let calibrationDone = false;
 let pixelPerMeter = null; // pixels per meter conversion ratio
@@ -27,6 +28,7 @@ let prevFrameData = null;
 const motionThreshold = 30; // pixel difference threshold
 const minMovementPixels = 5; // minimum pixel movement for calibration
 
+// --- Camera Setup ---
 function setupCamera() {
   const constraints = {
     video: {
@@ -51,7 +53,6 @@ function setupCamera() {
     });
 }
 
-
 // Adjust the overlay and motion canvas sizes to match the video
 function adjustCanvasSize() {
   overlay.width = video.videoWidth;
@@ -70,6 +71,19 @@ function addDebugLine(line) {
   }
   debugTextDiv.textContent = debugLines.join('\n');
 }
+
+// Allow user to copy the debug logs to the clipboard for feedback.
+copyDebugButton.addEventListener('click', () => {
+  const debugReport = debugLines.join('\n');
+  navigator.clipboard.writeText(debugReport)
+    .then(() => {
+      addDebugLine('Debug logs copied to clipboard.');
+    })
+    .catch(err => {
+      console.error('Error copying debug logs: ', err);
+      addDebugLine('Error copying debug logs: ' + err);
+    });
+});
 
 // Reset calibration when the user selects a new calibration distance
 calibrationSelect.addEventListener('change', () => {
