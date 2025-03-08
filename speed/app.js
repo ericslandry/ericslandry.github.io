@@ -3,6 +3,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const speedDisplay = document.getElementById('speed');
 const distanceSelect = document.getElementById('distance');
+const debugDisplay = document.getElementById('debug');
 
 let lastX = null, lastY = null, lastTime = null;
 let pixelDistance = null; // To store the pixel distance for calibration
@@ -12,6 +13,7 @@ const METERS_TO_KMH = 3.6; // m/s to km/h
 function resizeCanvas() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+    debugDisplay.textContent = `Debug Info: Canvas resized to ${canvas.width}x${canvas.height}`;
 }
 
 // Start the camera
@@ -24,12 +26,16 @@ navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             startTracking();
         };
     })
-    .catch(error => alert('Camera error: ' + error.message));
+    .catch(error => {
+        debugDisplay.textContent = `Debug Info: Camera error - ${error.message}`;
+        alert('Camera error: ' + error.message);
+    });
 
 // Use tracking.js to track a colored object
 function startTracking() {
     const tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'red']);
-    tracker.setMinDimension(10); // Minimum size of tracked object in pixels
+    tracker.setMinDimension(5); // Lowered to detect smaller objects
+    tracker.setMinGroupSize(10); // Minimum pixel group size for detection
 
     tracker.on('track', event => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -44,6 +50,8 @@ function startTracking() {
             ctx.lineWidth = 2;
             ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
 
+            let debugText = `Debug Info: Tracked at x:${x.toFixed(2)}, y:${y.toFixed(2)}, size:${rect.width}x${rect.height}`;
+
             // Calculate speed in km/h
             if (lastX !== null && lastY !== null && lastTime !== null) {
                 const now = performance.now();
@@ -52,9 +60,12 @@ function startTracking() {
                 const dy = y - lastY;
                 const distancePx = Math.sqrt(dx * dx + dy * dy); // Pixels moved
 
-                // Update pixelDistance for calibration on first significant movement
-                if (pixelDistance === null && distancePx > 20) { // Threshold to ensure movement
+                debugText += `\nDistance: ${distancePx.toFixed(2)} px, Time: ${dt.toFixed(4)} s`;
+
+                // Calibrate on first significant movement
+                if (pixelDistance === null && distancePx > 20) {
                     pixelDistance = distancePx;
+                    debugText += `\nCalibrated: ${pixelDistance.toFixed(2)} px = ${distanceSelect.value} m`;
                 }
 
                 // Calculate speed if calibrated
@@ -65,23 +76,31 @@ function startTracking() {
                     const speedMS = distanceM / dt; // Meters per second
                     const speedKMH = speedMS * METERS_TO_KMH; // Kilometers per hour
                     speedDisplay.textContent = `Speed: ${speedKMH.toFixed(2)} km/h`;
+                    debugText += `\nSpeed: ${speedKMH.toFixed(2)} km/h`;
                 } else {
                     speedDisplay.textContent = `Speed: Move object ${distanceSelect.value}m to calibrate`;
                 }
+            } else {
+                debugText += `\nFirst frame, initializing position`;
             }
+
+            debugDisplay.textContent = debugText;
 
             lastX = x;
             lastY = y;
-            lastTime = performance.now();
+            lastTime = now;
         } else {
-            speedDisplay.textContent = `Speed: 0 km/h`; // Reset if no object detected
+            speedDisplay.textContent = `Speed: 0 km/h`;
+            debugDisplay.textContent = `Debug Info: No object detected`;
         }
     });
 
     tracking.track('#video', tracker, { camera: true });
+    debugDisplay.textContent = `Debug Info: Tracking started`;
 }
 
 // Recalibrate when distance changes
 distanceSelect.addEventListener('change', () => {
-    pixelDistance = null; // Reset calibration when distance changes
+    pixelDistance = null; // Reset calibration
+    debugDisplay.textContent = `Debug Info: Distance changed to ${distanceSelect.value} m, recalibration needed`;
 });
