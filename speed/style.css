@@ -46,7 +46,8 @@ html, body {
   margin-bottom: 0.3em;
 }
 
-#calibrationSelect {
+#calibrationSelect,
+#copyDebugButton {
   font-size: 1em;
   margin-bottom: 0.3em;
 }
