@@ -92,10 +92,11 @@ function startTracking() {
                     const distanceM = distancePx * pixelsToMeters;
                     const speedMS = distanceM / dt;
                     const speedKMH = speedMS * METERS_TO_KMH;
-                    speedDisplay.textContent = `Speed: ${speedKMH.toFixed(2)} km/h`;
+                    speedDisplay.textContent = speedKMH.toFixed(2);
                     debugText += `\nSpeed: ${speedKMH.toFixed(2)} km/h`;
                 } else {
-                    speedDisplay.textContent = `Speed: Move ${distanceSelect.value}m to calibrate`;
+                    speedDisplay.textContent = '0';
+                    logDebug(`Waiting for calibration: Move ${distanceSelect.value}m`);
                 }
             } else {
                 debugText += `\nFirst frame, initializing position`;
@@ -107,7 +108,7 @@ function startTracking() {
             lastY = y;
             lastTime = now;
         } else {
-            speedDisplay.textContent = `Speed: 0 km/h`;
+            speedDisplay.textContent = '0';
             logDebug(`No object detected`);
         }
     });
