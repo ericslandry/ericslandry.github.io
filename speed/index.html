@@ -7,12 +7,21 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Object Speed Estimator</h1>
     <div id="container">
         <video id="video" autoplay muted></video>
         <canvas id="canvas"></canvas>
-        <div id="info">
+        <div id="overlay">
             <p id="speed">Speed: 0 km/h</p>
+            <button id="debugBtn">Debug</button>
+            <button id="settingsBtn">Settings</button>
+        </div>
+        <div id="debugPopup" class="popup hidden">
+            <h2>Debug Logs</h2>
+            <p id="debugLogs">No logs yet</p>
+            <button onclick="document.getElementById('debugPopup').classList.add('hidden')">Close</button>
+        </div>
+        <div id="settingsPopup" class="popup hidden">
+            <h2>Settings</h2>
             <label for="distance">Calibration Distance (m):</label>
             <select id="distance">
                 <option value="0.1">0.1</option>
@@ -22,8 +31,8 @@
                 <option value="5">5</option>
                 <option value="10">10</option>
             </select>
-            <p id="instructions">Move a bright object (e.g., red, blue) ~1m to calibrate.</p>
-            <p id="debug">Debug Info: Waiting for camera...</p>
+            <p>Move object this distance to calibrate.</p>
+            <button onclick="document.getElementById('settingsPopup').classList.add('hidden')">Close</button>
         </div>
     </div>
 
