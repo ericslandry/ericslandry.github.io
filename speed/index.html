@@ -7,32 +7,38 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="container">
-        <video id="video" autoplay muted></video>
-        <canvas id="canvas"></canvas>
-        <div id="overlay">
-            <p id="speed">Speed: 0 km/h</p>
-            <button id="debugBtn">Debug</button>
-            <button id="settingsBtn">Settings</button>
+    <div id="app">
+        <div id="video-container">
+            <video id="video" autoplay muted></video>
+            <canvas id="canvas"></canvas>
+            <div id="overlay">
+                <p id="speed">Speed: 0 km/h</p>
+                <button id="debugBtn">Debug</button>
+                <button id="settingsBtn">Settings</button>
+            </div>
         </div>
-        <div id="debugPopup" class="popup hidden">
-            <h2>Debug Logs</h2>
-            <p id="debugLogs">No logs yet</p>
-            <button onclick="document.getElementById('debugPopup').classList.add('hidden')">Close</button>
+        <div id="debugPopup" class="popup">
+            <div class="popup-content">
+                <h2>Debug Logs</h2>
+                <pre id="debugLogs">No logs yet</pre>
+                <button onclick="closePopup('debugPopup')">Close</button>
+            </div>
         </div>
-        <div id="settingsPopup" class="popup hidden">
-            <h2>Settings</h2>
-            <label for="distance">Calibration Distance (m):</label>
-            <select id="distance">
-                <option value="0.1">0.1</option>
-                <option value="0.5">0.5</option>
-                <option value="1" selected>1</option>
-                <option value="2">2</option>
-                <option value="5">5</option>
-                <option value="10">10</option>
-            </select>
-            <p>Move object this distance to calibrate.</p>
-            <button onclick="document.getElementById('settingsPopup').classList.add('hidden')">Close</button>
+        <div id="settingsPopup" class="popup">
+            <div class="popup-content">
+                <h2>Settings</h2>
+                <label for="distance">Calibration Distance (m):</label>
+                <select id="distance">
+                    <option value="0.1">0.1</option>
+                    <option value="0.5">0.5</option>
+                    <option value="1" selected>1</option>
+                    <option value="2">2</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                </select>
+                <p>Move object this distance to calibrate.</p>
+                <button onclick="closePopup('settingsPopup')">Close</button>
+            </div>
         </div>
     </div>
 
