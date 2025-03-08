@@ -3,17 +3,29 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const speedDisplay = document.getElementById('speed');
 const distanceSelect = document.getElementById('distance');
-const debugDisplay = document.getElementById('debug');
+const debugBtn = document.getElementById('debugBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const debugPopup = document.getElementById('debugPopup');
+const debugLogs = document.getElementById('debugLogs');
+const settingsPopup = document.getElementById('settingsPopup');
 
 let lastX = null, lastY = null, lastTime = null;
 let pixelDistance = null;
 const METERS_TO_KMH = 3.6;
+let debugLogArray = [];
+
+// Log debug info to array
+function logDebug(text) {
+    debugLogArray.push(text);
+    if (debugLogArray.length > 10) debugLogArray.shift(); // Keep last 10 logs
+    debugLogs.textContent = debugLogArray.join('\n');
+}
 
 // Set canvas size explicitly to 480x640
 function resizeCanvas() {
     canvas.width = 480;
     canvas.height = 640;
-    debugDisplay.textContent = `Debug Info: Canvas set to ${canvas.width}x${canvas.height}`;
+    logDebug(`Canvas set to ${canvas.width}x${canvas.height}`);
 }
 
 // Start the camera with constrained resolution
@@ -33,33 +45,31 @@ navigator.mediaDevices.getUserMedia({
         };
     })
     .catch(error => {
-        debugDisplay.textContent = `Debug Info: Camera error - ${error.message}`;
+        logDebug(`Camera error - ${error.message}`);
         alert('Camera error: ' + error.message);
     });
 
 // Use tracking.js to track a colored object
 function startTracking() {
     const tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow', 'red', 'green']);
-    tracker.setMinDimension(3); // Even lower for smaller objects
-    tracker.setMinGroupSize(5); // Lowered for sensitivity
-    tracker.setStepSize(1); // Finer step size for better detection
+    tracker.setMinDimension(3);
+    tracker.setMinGroupSize(5);
+    tracker.setStepSize(1);
 
     tracker.on('track', event => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (event.data.length > 0) {
-            const rect = event.data[0]; // Track the first detected object
+            const rect = event.data[0];
             const x = rect.x + rect.width / 2;
             const y = rect.y + rect.height / 2;
 
-            // Draw a rectangle around the tracked object
             ctx.strokeStyle = 'red';
             ctx.lineWidth = 2;
             ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
 
-            let debugText = `Debug Info: Tracked at x:${x.toFixed(2)}, y:${y.toFixed(2)}, size:${rect.width}x${rect.height}`;
+            let debugText = `Tracked at x:${x.toFixed(2)}, y:${y.toFixed(2)}, size:${rect.width}x${rect.height}`;
 
-            // Calculate speed in km/h
             if (lastX !== null && lastY !== null && lastTime !== null) {
                 const now = performance.now();
                 const dt = (now - lastTime) / 1000;
@@ -69,13 +79,11 @@ function startTracking() {
 
                 debugText += `\nDistance: ${distancePx.toFixed(2)} px, Time: ${dt.toFixed(4)} s`;
 
-                // Calibrate on first significant movement
-                if (pixelDistance === null && distancePx > 15) { // Lowered threshold
+                if (pixelDistance === null && distancePx > 15) {
                     pixelDistance = distancePx;
                     debugText += `\nCalibrated: ${pixelDistance.toFixed(2)} px = ${distanceSelect.value} m`;
                 }
 
-                // Calculate speed if calibrated
                 if (pixelDistance !== null) {
                     const selectedDistanceM = parseFloat(distanceSelect.value);
                     const pixelsToMeters = selectedDistanceM / pixelDistance;
@@ -85,29 +93,37 @@ function startTracking() {
                     speedDisplay.textContent = `Speed: ${speedKMH.toFixed(2)} km/h`;
                     debugText += `\nSpeed: ${speedKMH.toFixed(2)} km/h`;
                 } else {
-                    speedDisplay.textContent = `Speed: Move object ${distanceSelect.value}m to calibrate`;
+                    speedDisplay.textContent = `Speed: Move ${distanceSelect.value}m to calibrate`;
                 }
             } else {
                 debugText += `\nFirst frame, initializing position`;
             }
 
-            debugDisplay.textContent = debugText;
+            logDebug(debugText);
 
             lastX = x;
             lastY = y;
             lastTime = now;
         } else {
             speedDisplay.textContent = `Speed: 0 km/h`;
-            debugDisplay.textContent = `Debug Info: No object detected`;
+            logDebug(`No object detected`);
         }
     });
 
     tracking.track('#video', tracker, { camera: true });
-    debugDisplay.textContent = `Debug Info: Tracking started`;
+    logDebug(`Tracking started`);
 }
 
-// Recalibrate when distance changes
+// Button event listeners
+debugBtn.addEventListener('click', () => {
+    debugPopup.classList.remove('hidden');
+});
+
+settingsBtn.addEventListener('click', () => {
+    settingsPopup.classList.remove('hidden');
+});
+
 distanceSelect.addEventListener('change', () => {
     pixelDistance = null;
-    debugDisplay.textContent = `Debug Info: Distance changed to ${distanceSelect.value} m, recalibration needed`;
+    logDebug(`Distance changed to ${distanceSelect.value} m, recalibration needed`);
 });
