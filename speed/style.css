@@ -57,3 +57,12 @@ select {
     color: #555;
     margin: 5px 0;
 }
+
+#debug {
+    font-size: 12px;
+    color: #333;
+    margin: 10px 0;
+    white-space: pre-wrap;
+    max-width: 90%;
+    word-wrap: break-word;
+}
