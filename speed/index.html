@@ -2,30 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Human Speed Estimator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Human Speed Tracker</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="app-container">
         <div class="video-container">
-            <video id="video" autoplay muted playsinline></video>
+            <video id="video" autoplay playsinline></video>
             <canvas id="canvas"></canvas>
-            <div class="overlay">
-                <div class="speed">Speed: 0 km/h</div>
-                <select id="calibration-distance">
-                    <option value="0.1">0.1 m</option>
-                    <option value="0.5">0.5 m</option>
-                    <option value="1">1 m</option>
-                    <option value="2">2 m</option>
-                    <option value="5" selected>5 m</option>
-                    <option value="10">10 m</option>
-                </select>
-                <div class="debug" id="debug"></div>
+            
+            <div class="overlay-bar">
+                <div class="controls">
+                    <div class="speed-display">Speed: <span id="speed">0.00</span> km/h</div>
+                    
+                    <div class="calibration-control">
+                        <label for="distance">Calibration Distance:</label>
+                        <select id="distance">
+                            <option value="0.1">0.1m</option>
+                            <option value="0.5">0.5m</option>
+                            <option value="1" selected>1m</option>
+                            <option value="2">2m</option>
+                            <option value="5">5m</option>
+                            <option value="10">10m</option>
+                        </select>
+                        <button id="calibrate-btn">Calibrate</button>
+                    </div>
+                </div>
+                
+                <div class="debug-container">
+                    <div id="debug-text"></div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Include tracking.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tracking/1.1.3/tracking-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tracking/1.1.3/data/face-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tracking/1.1.3/data/eye-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tracking/1.1.3/data/mouth-min.js"></script>
+    
+    <!-- Include app script -->
     <script src="app.js"></script>
 </body>
 </html>
